@@ -98,6 +98,13 @@ export const deleteBookmark = (bookmarkId) =>
 export const updateBookmark = (bookmarkId, data) =>
   request(`/bookmarks/${bookmarkId}`, { method: 'PATCH', body: data });
 
+// Create a new bookmark
+export const createBookmark = (url, title) =>
+  request('/bookmarks', {
+    method: 'POST',
+    body: { type: 'link', url, title },
+  });
+
 // Tags
 export const fetchTags = () => request('/tags');
 

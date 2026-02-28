@@ -107,8 +107,8 @@ export function useKarakeep() {
   const createList = useCallback(async (name) => {
     try {
       const res = await api.createList(name);
-      // Optimistically add the new list
-      setLists(prev => [...prev, res]);
+      // Optimistically add the new list at the top
+      setLists(prev => [res, ...prev]);
       setListBookmarks(prev => ({ ...prev, [res.id]: [] }));
     } catch (err) {
       setError(err.message);
@@ -198,6 +198,14 @@ export function useKarakeep() {
     setUncategorized(prev => reorderFn(prev));
   }, []);
 
+  const prioritizeList = useCallback((listId) => {
+    setLists(prev => {
+      const target = prev.find(l => l.id === listId);
+      if (!target) return prev;
+      return [target, ...prev.filter(l => l.id !== listId)];
+    });
+  }, []);
+
   return {
     lists,
     listBookmarks,
@@ -212,6 +220,7 @@ export function useKarakeep() {
     removeList,
     reorderListBookmarks,
     reorderUncategorized,
+    prioritizeList,
     editBookmark,
     removeBookmark,
   };

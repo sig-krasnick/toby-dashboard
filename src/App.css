@@ -768,3 +768,177 @@
   color: var(--text-muted);
   padding: 24px;
 }
+
+/* ===== Settings Extension Row ===== */
+.settings-extension-row {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-extension-row input {
+  flex: 1;
+}
+
+.settings-test-ext {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.settings-test-ext:hover {
+  background: var(--bg-hover);
+}
+
+/* ===== Open Tabs Panel ===== */
+.open-tabs-panel {
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.open-tabs-setup {
+  max-width: 480px;
+}
+
+.open-tabs-setup h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.open-tabs-setup ol {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.open-tabs-setup code {
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.open-tabs-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.open-tabs-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.open-tabs-window {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.open-tabs-window-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.open-tabs-window-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.open-tabs-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+}
+
+.open-tabs-tab-count {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.open-tabs-save-btn {
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.open-tabs-save-btn:hover {
+  background: var(--accent-hover);
+}
+
+.open-tabs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.open-tabs-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.open-tabs-tab:last-child {
+  border-bottom: none;
+}
+
+.open-tabs-favicon {
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.open-tabs-tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.open-tabs-tab-title:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.open-tabs-hostname {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}

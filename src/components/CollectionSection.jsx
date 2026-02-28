@@ -3,7 +3,7 @@ import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { useState } from 'react';
 import BookmarkCard from './BookmarkCard';
 
-export default function CollectionSection({ list, bookmarks, onRename, onDelete, isUncategorized = false, allLists = [], onMove, onEditBookmark, onDeleteBookmark }) {
+export default function CollectionSection({ list, bookmarks, onRename, onDelete, isUncategorized = false, allLists = [], onMove, onEditBookmark, onDeleteBookmark, onOpenAllInWindow }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(list.name);
   const [collapsed, setCollapsed] = useState(false);
@@ -26,7 +26,13 @@ export default function CollectionSection({ list, bookmarks, onRename, onDelete,
       .filter(b => b.url);
     if (urls.length === 0) return;
 
-    // Open a single launcher tab that auto-opens all the URLs
+    // Use extension to open in a new window if available
+    if (onOpenAllInWindow) {
+      onOpenAllInWindow(urls.map(b => b.url));
+      return;
+    }
+
+    // Fallback: open a single launcher tab that auto-opens all the URLs
     const linksHtml = urls.map(b =>
       `<a href="${b.url}" target="_blank" rel="noopener">${b.title}</a>`
     ).join('<br>');

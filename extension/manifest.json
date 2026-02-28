@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Toby Dashboard Companion",
+  "version": "1.0.0",
+  "description": "Bridges Chrome tabs/windows APIs to the Toby Dashboard web app",
+  "permissions": ["tabs"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:5173/*",
+      "http://localhost:4173/*",
+      "http://127.0.0.1:5173/*",
+      "http://127.0.0.1:4173/*"
+    ]
+  }
+}

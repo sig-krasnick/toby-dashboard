@@ -9,11 +9,14 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { useKarakeep } from '../hooks/useKarakeep';
+import { useOpenTabs } from '../hooks/useOpenTabs';
 import CollectionSection from './CollectionSection';
+import OpenTabsPanel from './OpenTabsPanel';
 import { BookmarkCardOverlay } from './BookmarkCard';
 import Sidebar from './Sidebar';
 import Settings from './Settings';
 import SearchResults from './SearchResults';
+import { createBookmark, addBookmarkToList, createList as apiCreateList } from '../api/karakeep';
 
 export default function Dashboard() {
   const {
@@ -29,6 +32,7 @@ export default function Dashboard() {
     removeList,
     reorderListBookmarks,
     reorderUncategorized,
+    prioritizeList,
     editBookmark,
     removeBookmark,
   } = useKarakeep();
@@ -40,6 +44,9 @@ export default function Dashboard() {
   const [selectedList, setSelectedList] = useState('all');
   const [searchResults, setSearchResults] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const showOpenTabs = selectedList === 'open-tabs';
+  const { windows, extensionConnected, loading: tabsLoading, error: tabsError, openAsWindow, recheckExtension } = useOpenTabs(showOpenTabs);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -148,6 +155,27 @@ export default function Dashboard() {
     setSearchQuery('');
   };
 
+  const handleSaveWindow = async (tabs) => {
+    const name = window.prompt('Collection name:');
+    if (!name || !name.trim()) return;
+
+    try {
+      const newList = await apiCreateList(name.trim(), '\uD83D\uDCBB');
+      const listId = newList.id;
+
+      for (const tab of tabs) {
+        const bookmark = await createBookmark(tab.url, tab.title || tab.url);
+        await addBookmarkToList(listId, bookmark.id);
+      }
+
+      await loadData();
+      prioritizeList(listId);
+      setSelectedList('all');
+    } catch (err) {
+      console.error('Failed to save window:', err);
+    }
+  };
+
   const listsWithCounts = lists.map(l => ({
     ...l,
     count: (listBookmarks[l.id] || []).length,
@@ -179,18 +207,20 @@ export default function Dashboard() {
         selectedList={selectedList}
         onSelectList={(id) => { setSelectedList(id); clearSearch(); }}
         onSearch={handleSearch}
+        extensionConnected={extensionConnected}
       />
 
       <main className="main-content">
         <header className="top-bar">
           <div className="top-bar-left">
             <h1 className="page-title">
-              {selectedList === 'all' ? 'My Collections' :
+              {showOpenTabs ? 'Open Tabs' :
+               selectedList === 'all' ? 'My Collections' :
                selectedList === 'uncategorized' ? 'Uncategorized' :
                lists.find(l => l.id === selectedList)?.name || 'Collections'}
             </h1>
             <span className="collection-total">
-              {selectedList === 'all' ? `${lists.length} collections` : ''}
+              {showOpenTabs ? '' : selectedList === 'all' ? `${lists.length} collections` : ''}
             </span>
           </div>
           <div className="top-bar-right">
@@ -217,7 +247,7 @@ export default function Dashboard() {
 
         {showSettings && (
           <div className="settings-dropdown">
-            <Settings inline onConfigured={() => { setShowSettings(false); loadData(); }} />
+            <Settings inline onConfigured={() => { setShowSettings(false); loadData(); recheckExtension(); }} />
           </div>
         )}
 
@@ -228,7 +258,15 @@ export default function Dashboard() {
           </div>
         )}
 
-        {searchResults !== null ? (
+        {showOpenTabs ? (
+          <OpenTabsPanel
+            windows={windows}
+            loading={tabsLoading}
+            error={tabsError}
+            extensionConnected={extensionConnected}
+            onSaveWindow={handleSaveWindow}
+          />
+        ) : searchResults !== null ? (
           <SearchResults results={searchResults} query={searchQuery} onClose={clearSearch} />
         ) : (
           <DndContext
@@ -251,6 +289,7 @@ export default function Dashboard() {
                   onMove={moveBookmark}
                   onEditBookmark={editBookmark}
                   onDeleteBookmark={removeBookmark}
+                  onOpenAllInWindow={extensionConnected ? openAsWindow : null}
                 />
               ))}
 
@@ -265,6 +304,7 @@ export default function Dashboard() {
                   onMove={moveBookmark}
                   onEditBookmark={editBookmark}
                   onDeleteBookmark={removeBookmark}
+                  onOpenAllInWindow={extensionConnected ? openAsWindow : null}
                 />
               )}
             </div>
