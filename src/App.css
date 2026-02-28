@@ -473,7 +473,7 @@
   color: var(--accent);
 }
 
-/* ===== Cards Grid (Toby-like horizontal flow) ===== */
+/* ===== Cards Grid ===== */
 .collection-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));

@@ -1,12 +1,12 @@
-# Toby Dashboard
+# Karakeep Dashboard
 
-A Toby-inspired bookmark manager frontend for [Karakeep](https://github.com/karakeep-app/karakeep) (formerly Hoarder). Provides a visual, card-based UI for organizing bookmarks into collections with drag-and-drop support.
+A bookmark manager frontend for [Karakeep](https://github.com/karakeep-app/karakeep) (formerly Hoarder). Provides a visual, card-based UI for organizing bookmarks into collections with drag-and-drop support.
 
 ![React](https://img.shields.io/badge/React-19-blue) ![Vite](https://img.shields.io/badge/Vite-7-purple)
 
 ## Features
 
-- **Collection-based layout** — Horizontal sections with card grids, similar to Toby's tab groups
+- **Collection-based layout** — Horizontal sections with card grids
 - **Drag and drop** — Move bookmarks between collections or reorder within a collection
 - **Sidebar navigation** — Browse collections, filter views, and search bookmarks
 - **Right-click context menu** — Open, edit, move, or delete bookmarks

@@ -47,7 +47,7 @@ export default function Settings({ onConfigured, inline = false }) {
     <div className={`settings ${inline ? 'settings-inline' : 'settings-fullscreen'}`}>
       {!inline && (
         <div className="settings-header">
-          <h1>Toby Dashboard</h1>
+          <h1>Karakeep Dashboard</h1>
           <p>Connect to your Karakeep instance to get started.</p>
         </div>
       )}

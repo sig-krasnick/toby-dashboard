@@ -1,9 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Toby Dashboard Companion",
+  "name": "Karakeep Dashboard Companion",
   "version": "1.0.0",
-  "description": "Bridges Chrome tabs/windows APIs to the Toby Dashboard web app",
+  "description": "Bridges Chrome tabs/windows APIs to the Karakeep Dashboard web app",
   "permissions": ["tabs"],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "background": {
     "service_worker": "background.js"
   },

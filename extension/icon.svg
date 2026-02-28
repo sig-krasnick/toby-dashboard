@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="20" fill="#e8384f"/>
+  <g fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- browser window -->
+    <rect x="24" y="32" width="80" height="56" rx="6"/>
+    <line x1="24" y1="48" x2="104" y2="48"/>
+    <!-- tab indicators -->
+    <circle cx="36" cy="40" r="3" fill="white" stroke="none"/>
+    <circle cx="48" cy="40" r="3" fill="white" stroke="none"/>
+    <circle cx="60" cy="40" r="3" fill="white" stroke="none"/>
+    <!-- bookmark icon centered below tab bar -->
+    <path d="M52 56 L52 78 L64 70 L76 78 L76 56" stroke-width="5"/>
+    <!-- stand -->
+    <line x1="52" y1="96" x2="76" y2="96"/>
+    <line x1="64" y1="88" x2="64" y2="96"/>
+  </g>
+</svg>
