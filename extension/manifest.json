@@ -25,7 +25,9 @@
       "http://localhost:5173/*",
       "http://localhost:4173/*",
       "http://127.0.0.1:5173/*",
-      "http://127.0.0.1:4173/*"
+      "http://127.0.0.1:4173/*",
+      "http://karakeep-dashboard.beaver-hen.ts.net/*",
+      "http://100.114.3.92/*"
     ]
   }
 }
