@@ -3,6 +3,34 @@ import { arrayMove } from '@dnd-kit/sortable';
 import * as api from '../api/karakeep';
 
 const LIST_ORDER_KEY = 'karakeep_list_order';
+const BOOKMARK_ORDER_KEY = 'karakeep_bookmark_order';
+
+function getSavedBookmarkOrder() {
+  try {
+    const stored = localStorage.getItem(BOOKMARK_ORDER_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch { return {}; }
+}
+
+function saveBookmarkOrder(listId, bookmarkIds) {
+  try {
+    const all = getSavedBookmarkOrder();
+    all[listId] = bookmarkIds;
+    localStorage.setItem(BOOKMARK_ORDER_KEY, JSON.stringify(all));
+  } catch { /* ignore */ }
+}
+
+function applyBookmarkOrder(listId, bookmarks) {
+  const all = getSavedBookmarkOrder();
+  const savedIds = all[listId];
+  if (!savedIds || !Array.isArray(savedIds)) return bookmarks;
+  const orderMap = new Map(savedIds.map((id, i) => [id, i]));
+  return [...bookmarks].sort((a, b) => {
+    const aIdx = orderMap.has(a.id) ? orderMap.get(a.id) : Infinity;
+    const bIdx = orderMap.has(b.id) ? orderMap.get(b.id) : Infinity;
+    return aIdx - bIdx;
+  });
+}
 
 export function useKarakeep() {
   const [lists, setLists] = useState([]);
@@ -55,12 +83,13 @@ export function useKarakeep() {
 
       const assignedBookmarkIds = new Set();
       results.forEach(({ listId, items }) => {
-        listBookmarkMap[listId] = items;
+        listBookmarkMap[listId] = applyBookmarkOrder(listId, items);
         items.forEach(b => assignedBookmarkIds.add(b.id));
       });
 
       setListBookmarks(listBookmarkMap);
-      setUncategorized(bookmarks.filter(b => !assignedBookmarkIds.has(b.id)));
+      const uncatBookmarks = bookmarks.filter(b => !assignedBookmarkIds.has(b.id));
+      setUncategorized(applyBookmarkOrder('uncategorized', uncatBookmarks));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -210,14 +239,19 @@ export function useKarakeep() {
   }, [loadData]);
 
   const reorderListBookmarks = useCallback((listId, reorderFn) => {
-    setListBookmarks(prev => ({
-      ...prev,
-      [listId]: reorderFn(prev[listId] || []),
-    }));
+    setListBookmarks(prev => {
+      const reordered = reorderFn(prev[listId] || []);
+      saveBookmarkOrder(listId, reordered.map(b => b.id));
+      return { ...prev, [listId]: reordered };
+    });
   }, []);
 
   const reorderUncategorized = useCallback((reorderFn) => {
-    setUncategorized(prev => reorderFn(prev));
+    setUncategorized(prev => {
+      const reordered = reorderFn(prev);
+      saveBookmarkOrder('uncategorized', reordered.map(b => b.id));
+      return reordered;
+    });
   }, []);
 
   const reorderLists = useCallback((activeId, overId) => {

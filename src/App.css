@@ -768,6 +768,11 @@
   text-transform: uppercase;
 }
 
+.context-menu-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
 /* ===== Edit Title Input ===== */
 .bookmark-edit-title {
   flex: 1;
