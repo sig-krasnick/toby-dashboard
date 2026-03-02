@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Private docs with environment-specific details
+TECHNICAL_GUIDE.md
