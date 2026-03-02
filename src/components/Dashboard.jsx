@@ -227,6 +227,7 @@ export default function Dashboard() {
         onSelectList={(id) => { setSelectedList(id); clearSearch(); }}
         onSearch={handleSearch}
         extensionConnected={extensionConnected}
+        onReorderLists={reorderLists}
       />
 
       <main className="main-content">
