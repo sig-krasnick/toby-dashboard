@@ -7,7 +7,7 @@ import {
   useSensors,
   rectIntersection,
 } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
+import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useKarakeep } from '../hooks/useKarakeep';
 import { useOpenTabs } from '../hooks/useOpenTabs';
 import CollectionSection from './CollectionSection';
@@ -30,6 +30,7 @@ export default function Dashboard() {
     createList,
     renameList,
     removeList,
+    reorderLists,
     reorderListBookmarks,
     reorderUncategorized,
     prioritizeList,
@@ -38,6 +39,7 @@ export default function Dashboard() {
   } = useKarakeep();
 
   const [activeBookmark, setActiveBookmark] = useState(null);
+  const [activeCollection, setActiveCollection] = useState(null);
   const [activeSourceList, setActiveSourceList] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -71,8 +73,14 @@ export default function Dashboard() {
   }, [listBookmarks, uncategorized]);
 
   const handleDragStart = (event) => {
-    const bookmark = findBookmarkById(event.active.id);
-    const sourceList = findBookmarkList(event.active.id);
+    const { active } = event;
+    if (active.data?.current?.type === 'collection') {
+      const list = lists.find(l => l.id === active.id);
+      setActiveCollection(list || null);
+      return;
+    }
+    const bookmark = findBookmarkById(active.id);
+    const sourceList = findBookmarkList(active.id);
     setActiveBookmark(bookmark);
     setActiveSourceList(sourceList);
   };
@@ -83,6 +91,16 @@ export default function Dashboard() {
 
   const handleDragEnd = async (event) => {
     const { active, over } = event;
+
+    // Handle collection reorder
+    if (active.data?.current?.type === 'collection') {
+      setActiveCollection(null);
+      if (over && active.id !== over.id) {
+        reorderLists(active.id, over.id);
+      }
+      return;
+    }
+
     setActiveBookmark(null);
 
     if (!over) {
@@ -132,6 +150,7 @@ export default function Dashboard() {
 
   const handleDragCancel = () => {
     setActiveBookmark(null);
+    setActiveCollection(null);
     setActiveSourceList(null);
   };
 
@@ -278,20 +297,23 @@ export default function Dashboard() {
             onDragCancel={handleDragCancel}
           >
             <div className="collections-area">
-              {visibleLists.map((list) => (
-                <CollectionSection
-                  key={list.id}
-                  list={list}
-                  bookmarks={listBookmarks[list.id] || []}
-                  onRename={renameList}
-                  onDelete={removeList}
-                  allLists={lists}
-                  onMove={moveBookmark}
-                  onEditBookmark={editBookmark}
-                  onDeleteBookmark={removeBookmark}
-                  onOpenAllInWindow={extensionConnected ? openAsWindow : null}
-                />
-              ))}
+              <SortableContext items={visibleLists.map(l => l.id)} strategy={verticalListSortingStrategy}>
+                {visibleLists.map((list) => (
+                  <CollectionSection
+                    key={list.id}
+                    list={list}
+                    bookmarks={listBookmarks[list.id] || []}
+                    onRename={renameList}
+                    onDelete={removeList}
+                    allLists={lists}
+                    onMove={moveBookmark}
+                    onEditBookmark={editBookmark}
+                    onDeleteBookmark={removeBookmark}
+                    onOpenAllInWindow={extensionConnected ? openAsWindow : null}
+                    sortable={selectedList === 'all'}
+                  />
+                ))}
+              </SortableContext>
 
               {showUncategorized && uncategorized.length > 0 && (
                 <CollectionSection
@@ -312,6 +334,11 @@ export default function Dashboard() {
             <DragOverlay dropAnimation={null}>
               {activeBookmark ? (
                 <BookmarkCardOverlay bookmark={activeBookmark} />
+              ) : activeCollection ? (
+                <div className="collection-overlay">
+                  <span className="collection-overlay-icon">{activeCollection.icon || '\uD83D\uDCC1'}</span>
+                  <span className="collection-overlay-name">{activeCollection.name}</span>
+                </div>
               ) : null}
             </DragOverlay>
           </DndContext>

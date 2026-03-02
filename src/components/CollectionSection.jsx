@@ -1,17 +1,36 @@
 import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable, SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';
 import BookmarkCard from './BookmarkCard';
 
-export default function CollectionSection({ list, bookmarks, onRename, onDelete, isUncategorized = false, allLists = [], onMove, onEditBookmark, onDeleteBookmark, onOpenAllInWindow }) {
+export default function CollectionSection({ list, bookmarks, onRename, onDelete, isUncategorized = false, allLists = [], onMove, onEditBookmark, onDeleteBookmark, onOpenAllInWindow, sortable = false }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(list.name);
   const [collapsed, setCollapsed] = useState(false);
 
-  const { setNodeRef, isOver } = useDroppable({
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: list.id,
     data: { type: 'list', listId: list.id },
   });
+
+  const {
+    attributes: sortableAttributes,
+    listeners: sortableListeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: list.id,
+    data: { type: 'collection', listId: list.id },
+    disabled: !sortable,
+  });
+
+  const sortableStyle = sortable ? {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  } : {};
 
   const handleRename = () => {
     if (name.trim() && name !== list.name) {
@@ -65,9 +84,30 @@ export default function CollectionSection({ list, bookmarks, onRename, onDelete,
   const bookmarkIds = bookmarks.map(b => b.id);
 
   return (
-    <div className={`collection-section ${isOver ? 'drag-over' : ''}`}>
+    <div
+      ref={sortable ? setSortableRef : undefined}
+      style={sortableStyle}
+      {...(sortable ? sortableAttributes : {})}
+      className={`collection-section ${isOver ? 'drag-over' : ''} ${isDragging ? 'dragging' : ''}`}
+    >
       <div className="collection-header">
         <div className="collection-header-left">
+          {sortable && (
+            <button
+              className="collection-drag-handle"
+              {...sortableListeners}
+              title="Drag to reorder"
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="3" r="1.5" />
+                <circle cx="11" cy="3" r="1.5" />
+                <circle cx="5" cy="8" r="1.5" />
+                <circle cx="11" cy="8" r="1.5" />
+                <circle cx="5" cy="13" r="1.5" />
+                <circle cx="11" cy="13" r="1.5" />
+              </svg>
+            </button>
+          )}
           <button
             className="collection-chevron"
             onClick={() => setCollapsed(!collapsed)}
@@ -144,7 +184,7 @@ export default function CollectionSection({ list, bookmarks, onRename, onDelete,
       </div>
 
       {!collapsed && (
-        <div ref={setNodeRef} className="collection-drop-zone">
+        <div ref={setDropRef} className="collection-drop-zone">
           <SortableContext items={bookmarkIds} strategy={rectSortingStrategy}>
             <div className="collection-cards">
               {bookmarks.length === 0 && (

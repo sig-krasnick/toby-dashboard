@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { arrayMove } from '@dnd-kit/sortable';
 import * as api from '../api/karakeep';
+
+const LIST_ORDER_KEY = 'karakeep_list_order';
 
 export function useKarakeep() {
   const [lists, setLists] = useState([]);
@@ -20,7 +23,26 @@ export function useKarakeep() {
       ]);
 
       const manualLists = (listsRes.lists || []).filter(l => l.type === 'manual');
-      setLists(manualLists);
+
+      // Apply saved order from localStorage
+      const savedOrder = (() => {
+        try {
+          const stored = localStorage.getItem(LIST_ORDER_KEY);
+          return stored ? JSON.parse(stored) : null;
+        } catch { return null; }
+      })();
+
+      if (savedOrder && Array.isArray(savedOrder)) {
+        const orderMap = new Map(savedOrder.map((id, i) => [id, i]));
+        const ordered = [...manualLists].sort((a, b) => {
+          const aIdx = orderMap.has(a.id) ? orderMap.get(a.id) : Infinity;
+          const bIdx = orderMap.has(b.id) ? orderMap.get(b.id) : Infinity;
+          return aIdx - bIdx;
+        });
+        setLists(ordered);
+      } else {
+        setLists(manualLists);
+      }
       setAllBookmarks(bookmarks);
 
       const listBookmarkMap = {};
@@ -198,6 +220,19 @@ export function useKarakeep() {
     setUncategorized(prev => reorderFn(prev));
   }, []);
 
+  const reorderLists = useCallback((activeId, overId) => {
+    setLists(prev => {
+      const oldIndex = prev.findIndex(l => l.id === activeId);
+      const newIndex = prev.findIndex(l => l.id === overId);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      const reordered = arrayMove(prev, oldIndex, newIndex);
+      try {
+        localStorage.setItem(LIST_ORDER_KEY, JSON.stringify(reordered.map(l => l.id)));
+      } catch { /* ignore */ }
+      return reordered;
+    });
+  }, []);
+
   const prioritizeList = useCallback((listId) => {
     setLists(prev => {
       const target = prev.find(l => l.id === listId);
@@ -218,6 +253,7 @@ export function useKarakeep() {
     createList,
     renameList,
     removeList,
+    reorderLists,
     reorderListBookmarks,
     reorderUncategorized,
     prioritizeList,

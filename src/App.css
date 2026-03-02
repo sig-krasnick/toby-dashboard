@@ -390,6 +390,10 @@
   border-radius: 8px;
 }
 
+.collection-section.dragging {
+  opacity: 0.4;
+}
+
 .collection-header {
   display: flex;
   align-items: center;
@@ -401,6 +405,32 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.collection-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 24px;
+  color: var(--text-muted);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.collection-section:hover .collection-drag-handle {
+  opacity: 1;
+}
+
+.collection-drag-handle:hover {
+  color: var(--text);
+}
+
+.collection-drag-handle:active {
+  cursor: grabbing;
 }
 
 .collection-chevron {
@@ -499,6 +529,31 @@
   font-size: 13px;
   border: 2px dashed var(--border);
   border-radius: var(--radius);
+}
+
+/* ===== Collection Drag Overlay ===== */
+.collection-overlay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-white);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  cursor: grabbing;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.collection-overlay-icon {
+  font-size: 16px;
+}
+
+.collection-overlay-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ===== Bookmark Card ===== */
