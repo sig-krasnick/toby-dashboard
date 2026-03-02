@@ -4,6 +4,42 @@ import * as api from '../api/karakeep';
 
 const LIST_ORDER_KEY = 'karakeep_list_order';
 const BOOKMARK_ORDER_KEY = 'karakeep_bookmark_order';
+const DATA_CACHE_KEY = 'karakeep_data_cache';
+
+function loadDataCache() {
+  try {
+    const stored = localStorage.getItem(DATA_CACHE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch { return null; }
+}
+
+function slimBookmark(b) {
+  return {
+    id: b.id,
+    title: b.title,
+    content: b.content ? {
+      title: b.content.title,
+      url: b.content.url,
+      sourceUrl: b.content.sourceUrl,
+      text: b.content.text?.slice(0, 60),
+      favicon: b.content.favicon,
+      description: b.content.description,
+    } : undefined,
+  };
+}
+
+function saveDataCache(data) {
+  try {
+    const slim = {
+      lists: data.lists,
+      listBookmarks: Object.fromEntries(
+        Object.entries(data.listBookmarks).map(([k, v]) => [k, v.map(slimBookmark)])
+      ),
+      uncategorized: data.uncategorized.map(slimBookmark),
+    };
+    localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(slim));
+  } catch { /* ignore */ }
+}
 
 function getSavedBookmarkOrder() {
   try {
@@ -34,25 +70,21 @@ function applyBookmarkOrder(listId, bookmarks) {
 
 export function useKarakeep() {
   const [lists, setLists] = useState([]);
-  const [allBookmarks, setAllBookmarks] = useState([]);
   const [listBookmarks, setListBookmarks] = useState({});
   const [uncategorized, setUncategorized] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async ({ silent = false } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
 
-      const [listsRes, bookmarks] = await Promise.all([
-        api.fetchLists(),
-        api.fetchBookmarks(),
-      ]);
-
+      // Stage 1: Fetch lists (single fast API call)
+      const listsRes = await api.fetchLists();
       const manualLists = (listsRes.lists || []).filter(l => l.type === 'manual');
 
-      // Apply saved order from localStorage
+      // Apply saved list order from localStorage
       const savedOrder = (() => {
         try {
           const stored = localStorage.getItem(LIST_ORDER_KEY);
@@ -60,36 +92,44 @@ export function useKarakeep() {
         } catch { return null; }
       })();
 
+      let orderedLists;
       if (savedOrder && Array.isArray(savedOrder)) {
         const orderMap = new Map(savedOrder.map((id, i) => [id, i]));
-        const ordered = [...manualLists].sort((a, b) => {
+        orderedLists = [...manualLists].sort((a, b) => {
           const aIdx = orderMap.has(a.id) ? orderMap.get(a.id) : Infinity;
           const bIdx = orderMap.has(b.id) ? orderMap.get(b.id) : Infinity;
           return aIdx - bIdx;
         });
-        setLists(ordered);
       } else {
-        setLists(manualLists);
+        orderedLists = manualLists;
       }
-      setAllBookmarks(bookmarks);
 
-      const listBookmarkMap = {};
-      const results = await Promise.all(
-        manualLists.map(async (list) => {
+      // Stage 2: Fetch all bookmarks + per-list bookmarks in parallel
+      const [bookmarks, ...listResults] = await Promise.all([
+        api.fetchBookmarks(),
+        ...manualLists.map(async (list) => {
           const items = await api.fetchListBookmarks(list.id);
           return { listId: list.id, items };
-        })
-      );
+        }),
+      ]);
 
+      const listBookmarkMap = {};
       const assignedBookmarkIds = new Set();
-      results.forEach(({ listId, items }) => {
+      listResults.forEach(({ listId, items }) => {
         listBookmarkMap[listId] = applyBookmarkOrder(listId, items);
         items.forEach(b => assignedBookmarkIds.add(b.id));
       });
 
-      setListBookmarks(listBookmarkMap);
       const uncatBookmarks = bookmarks.filter(b => !assignedBookmarkIds.has(b.id));
-      setUncategorized(applyBookmarkOrder('uncategorized', uncatBookmarks));
+      const orderedUncategorized = applyBookmarkOrder('uncategorized', uncatBookmarks);
+
+      // Cache from local variables (not React state) to avoid effect timing issues
+      saveDataCache({ lists: orderedLists, listBookmarks: listBookmarkMap, uncategorized: orderedUncategorized });
+
+      // Set all state together so React batches into a single render
+      setLists(orderedLists);
+      setListBookmarks(listBookmarkMap);
+      setUncategorized(orderedUncategorized);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -99,11 +139,27 @@ export function useKarakeep() {
 
   useEffect(() => {
     if (api.isConfigured()) {
-      loadData();
+      const cached = loadDataCache();
+      if (cached) {
+        setLists(cached.lists || []);
+        setListBookmarks(cached.listBookmarks || {});
+        setUncategorized(cached.uncategorized || []);
+        setLoading(false);
+        loadData({ silent: true });
+      } else {
+        loadData();
+      }
     } else {
       setLoading(false);
     }
   }, [loadData]);
+
+  // Auto-save data cache when state changes (captures optimistic updates too)
+  useEffect(() => {
+    if (lists.length > 0 && Object.keys(listBookmarks).length > 0) {
+      saveDataCache({ lists, listBookmarks, uncategorized });
+    }
+  }, [lists, listBookmarks, uncategorized]);
 
   const moveBookmark = useCallback(async (bookmarkId, fromListId, toListId) => {
     // Find the bookmark object before modifying state
@@ -279,7 +335,6 @@ export function useKarakeep() {
     lists,
     listBookmarks,
     uncategorized,
-    allBookmarks,
     loading,
     error,
     loadData,

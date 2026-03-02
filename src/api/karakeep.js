@@ -123,6 +123,7 @@ export const isConfigured = () => {
 export const saveConfig = (serverUrl, apiKey) => {
   localStorage.setItem('karakeep_server_url', serverUrl);
   localStorage.setItem('karakeep_api_key', apiKey);
+  localStorage.removeItem('karakeep_data_cache');
 };
 
 export const testConnection = async () => {
