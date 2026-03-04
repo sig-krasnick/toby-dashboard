@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getWindows, openWindow, isExtensionAvailable } from '../api/extension';
+import { getWindows, openWindow, isExtensionAvailable, pushConfig } from '../api/extension';
 
 export function useOpenTabs(enabled) {
   const [windows, setWindows] = useState([]);
@@ -34,6 +34,17 @@ export function useOpenTabs(enabled) {
     });
     return () => { cancelled = true; };
   }, []);
+
+  // Push Karakeep config to extension when connected
+  useEffect(() => {
+    if (extensionConnected) {
+      const serverUrl = localStorage.getItem('karakeep_server_url') || '';
+      const apiKey = localStorage.getItem('karakeep_api_key') || '';
+      if (serverUrl && apiKey) {
+        pushConfig(serverUrl, apiKey).catch(() => {});
+      }
+    }
+  }, [extensionConnected]);
 
   // Poll when enabled and connected
   useEffect(() => {

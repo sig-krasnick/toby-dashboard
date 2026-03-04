@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <div id="state-not-configured" class="state" hidden>
+      <div class="popup-icon">🔗</div>
+      <p class="popup-message">Open the <a href="http://100.114.3.92/" target="_blank">Karakeep Dashboard</a> to connect.</p>
+      <p class="popup-hint">The dashboard will automatically sync credentials to this extension.</p>
+    </div>
+
+    <div id="state-form" class="state" hidden>
+      <div class="current-page">
+        <img id="page-favicon" class="page-favicon" width="16" height="16" alt="">
+        <div class="page-info">
+          <input id="page-title" type="text" class="page-title-input" placeholder="Page title">
+          <div id="page-url" class="page-url"></div>
+        </div>
+      </div>
+
+      <label class="field-label" for="collection-select">Collection</label>
+      <select id="collection-select" class="collection-select">
+        <option value="">Uncategorized</option>
+      </select>
+
+      <div id="new-collection-row" class="new-collection-row" hidden>
+        <input id="new-collection-name" type="text" class="new-collection-input" placeholder="Collection name...">
+      </div>
+
+      <button id="save-btn" class="save-btn">Save Bookmark</button>
+    </div>
+
+    <div id="state-saving" class="state" hidden>
+      <div class="spinner"></div>
+      <p class="popup-message">Saving...</p>
+    </div>
+
+    <div id="state-success" class="state" hidden>
+      <div class="popup-icon success-icon">&#x2713;</div>
+      <p class="popup-message">Saved!</p>
+    </div>
+
+    <div id="state-error" class="state" hidden>
+      <div class="popup-icon error-icon">!</div>
+      <p id="error-message" class="popup-message"></p>
+      <button id="retry-btn" class="retry-btn">Try Again</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

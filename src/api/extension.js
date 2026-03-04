@@ -41,6 +41,9 @@ export const getWindows = () => sendMessage({ type: 'getWindows' });
 
 export const openWindow = (urls) => sendMessage({ type: 'openWindow', urls });
 
+export const pushConfig = (serverUrl, apiKey) =>
+  sendMessage({ type: 'setConfig', serverUrl, apiKey });
+
 export const isExtensionAvailable = async () => {
   try {
     await ping();

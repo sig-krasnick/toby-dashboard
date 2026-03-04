@@ -3,7 +3,7 @@
   "name": "Karakeep Dashboard Companion",
   "version": "1.0.0",
   "description": "Bridges Chrome tabs/windows APIs to the Karakeep Dashboard web app",
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "storage"],
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
@@ -15,20 +15,18 @@
       "48": "icon48.png",
       "128": "icon128.png"
     },
-    "default_title": "Karakeep Dashboard Companion"
+    "default_title": "Save to Karakeep",
+    "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "background.js"
   },
-  "chrome_url_overrides": {
-    "newtab": "newtab.html"
-  },
   "externally_connectable": {
     "matches": [
-      "http://localhost:5173/*",
-      "http://localhost:4173/*",
-      "http://127.0.0.1:5173/*",
-      "http://127.0.0.1:4173/*",
+      "http://localhost:5174/*",
+      "http://localhost:4174/*",
+      "http://127.0.0.1:5174/*",
+      "http://127.0.0.1:4174/*",
       "http://karakeep-dashboard.beaver-hen.ts.net/*",
       "http://100.114.3.92/*"
     ]
