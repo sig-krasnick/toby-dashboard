@@ -6,6 +6,19 @@ const LIST_ORDER_KEY = 'karakeep_list_order';
 const BOOKMARK_ORDER_KEY = 'karakeep_bookmark_order';
 const DATA_CACHE_KEY = 'karakeep_data_cache';
 
+// Debounce server-side order saves to avoid hammering the API during rapid reordering
+let orderSaveTimer = null;
+function debouncedSaveOrderToServer() {
+  clearTimeout(orderSaveTimer);
+  orderSaveTimer = setTimeout(() => {
+    try {
+      const listOrder = JSON.parse(localStorage.getItem(LIST_ORDER_KEY) || 'null');
+      const bookmarkOrder = JSON.parse(localStorage.getItem(BOOKMARK_ORDER_KEY) || '{}');
+      api.saveDashboardOrder(listOrder, bookmarkOrder);
+    } catch { /* ignore */ }
+  }, 2000);
+}
+
 function loadDataCache() {
   try {
     const stored = localStorage.getItem(DATA_CACHE_KEY);
@@ -53,6 +66,7 @@ function saveBookmarkOrder(listId, bookmarkIds) {
     const all = getSavedBookmarkOrder();
     all[listId] = bookmarkIds;
     localStorage.setItem(BOOKMARK_ORDER_KEY, JSON.stringify(all));
+    debouncedSaveOrderToServer();
   } catch { /* ignore */ }
 }
 
@@ -80,11 +94,24 @@ export function useKarakeep() {
       if (!silent) setLoading(true);
       setError(null);
 
-      // Stage 1: Fetch lists (single fast API call)
-      const listsRes = await api.fetchLists();
+      // Stage 1: Fetch lists + server-side ordering in parallel
+      const [listsRes, serverOrder] = await Promise.all([
+        api.fetchLists(),
+        api.fetchDashboardOrder(),
+      ]);
       const manualLists = (listsRes.lists || []).filter(l => l.type === 'manual');
 
-      // Apply saved list order from localStorage
+      // Sync server order to localStorage (server is source of truth)
+      if (serverOrder) {
+        if (serverOrder.listOrder) {
+          localStorage.setItem(LIST_ORDER_KEY, JSON.stringify(serverOrder.listOrder));
+        }
+        if (serverOrder.bookmarkOrder) {
+          localStorage.setItem(BOOKMARK_ORDER_KEY, JSON.stringify(serverOrder.bookmarkOrder));
+        }
+      }
+
+      // Apply list order (now synced from server)
       const savedOrder = (() => {
         try {
           const stored = localStorage.getItem(LIST_ORDER_KEY);
@@ -318,6 +345,7 @@ export function useKarakeep() {
       const reordered = arrayMove(prev, oldIndex, newIndex);
       try {
         localStorage.setItem(LIST_ORDER_KEY, JSON.stringify(reordered.map(l => l.id)));
+        debouncedSaveOrderToServer();
       } catch { /* ignore */ }
       return reordered;
     });

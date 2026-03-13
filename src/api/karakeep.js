@@ -108,6 +108,58 @@ export const createBookmark = (url, title) =>
 // Tags
 export const fetchTags = () => request('/tags');
 
+// Dashboard ordering — stored as a text bookmark tagged "_dashboard_order"
+const DASHBOARD_ORDER_TAG = '_dashboard_order';
+
+export const fetchDashboardOrder = async () => {
+  try {
+    const res = await request('/bookmarks/search', { params: { q: `#${DASHBOARD_ORDER_TAG}` } });
+    const configBookmark = (res.bookmarks || []).find(b =>
+      (b.tags || []).some(t => t.name === DASHBOARD_ORDER_TAG)
+    );
+    if (!configBookmark) return null;
+    // Order data is in the note field (works for any bookmark type)
+    const data = configBookmark.note ? JSON.parse(configBookmark.note) : null;
+    if (!data) return null;
+    return { id: configBookmark.id, ...data };
+  } catch {
+    return null;
+  }
+};
+
+export const saveDashboardOrder = async (listOrder, bookmarkOrder) => {
+  const note = JSON.stringify({ listOrder, bookmarkOrder });
+  try {
+    // Check if config bookmark already exists
+    const existing = await fetchDashboardOrder();
+    if (existing) {
+      await request(`/bookmarks/${existing.id}`, {
+        method: 'PATCH',
+        body: { note },
+      });
+    } else {
+      // Create a text bookmark as a config anchor, store order in note field
+      const bookmark = await request('/bookmarks', {
+        method: 'POST',
+        body: { type: 'text', text: 'Karakeep Dashboard ordering config — do not delete' },
+      });
+      // Tag it so we can find it, set the note, and archive it
+      await Promise.all([
+        request(`/bookmarks/${bookmark.id}/tags`, {
+          method: 'POST',
+          body: { tags: [{ tagName: DASHBOARD_ORDER_TAG }] },
+        }),
+        request(`/bookmarks/${bookmark.id}`, {
+          method: 'PATCH',
+          body: { archived: true, note },
+        }),
+      ]);
+    }
+  } catch (err) {
+    console.warn('Failed to save dashboard order:', err);
+  }
+};
+
 // Assets — returns a direct URL for <img> tags
 export const getAssetUrl = (assetId) => {
   const { serverUrl, apiKey } = getConfig();

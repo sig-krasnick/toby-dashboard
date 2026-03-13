@@ -101,7 +101,7 @@ export default function BookmarkCard({ bookmark, lists, currentListId, onMove, o
       const dy = Math.abs(e.clientY - start.y);
       if (dx > 5 || dy > 5) return;
     }
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.location.href = url;
   };
 
   const handleContextMenu = (e) => {
